@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+  min-height: 100vh;
+  color: #e0e0e0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a4a6a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a7a;
+}
+
+/* Game title font */
+.font-game {
+  font-family: 'Cinzel', serif;
+}
+
+/* Button styles */
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400
+           text-white font-semibold py-3 px-6 rounded-lg shadow-lg
+           transition-all duration-300 transform hover:scale-105 hover:shadow-primary-500/25;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-to-r from-secondary-600 to-secondary-500 hover:from-secondary-500 hover:to-secondary-400
+           text-white font-semibold py-3 px-6 rounded-lg shadow-lg
+           transition-all duration-300 transform hover:scale-105 hover:shadow-secondary-500/25;
+  }
+
+  .input-field {
+    @apply w-full bg-game-dark/50 border border-gray-700 rounded-lg px-4 py-3
+           text-white placeholder-gray-500 focus:outline-none focus:border-primary-500
+           focus:ring-2 focus:ring-primary-500/20 transition-all duration-300;
+  }
+
+  .card {
+    @apply bg-game-light/80 backdrop-blur-sm border border-gray-700/50 rounded-xl
+           shadow-xl p-6 transition-all duration-300 hover:border-primary-500/30;
+  }
+}
