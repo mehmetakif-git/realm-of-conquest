@@ -33,10 +33,19 @@ export default function GameCanvas({
   // Load current map
   useEffect(() => {
     const mapId = character.map_id || 'starting_village';
+    console.log('[GameCanvas] Loading map:', mapId, 'Available maps:', Object.keys(MAPS));
     const map = MAPS[mapId];
     if (map) {
+      console.log('[GameCanvas] Map found:', map.name);
       setCurrentMap(map);
-      setPlayerPosition({ x: character.position_x, y: character.position_y });
+      setPlayerPosition({ x: character.position_x || map.spawnPoint.x, y: character.position_y || map.spawnPoint.y });
+    } else {
+      console.log('[GameCanvas] Map not found, using default starting_village');
+      const defaultMap = MAPS['starting_village'];
+      if (defaultMap) {
+        setCurrentMap(defaultMap);
+        setPlayerPosition({ x: defaultMap.spawnPoint.x, y: defaultMap.spawnPoint.y });
+      }
     }
   }, [character.map_id, character.position_x, character.position_y]);
 
@@ -356,86 +365,119 @@ export default function GameCanvas({
 
   // Initialize PixiJS
   useEffect(() => {
-    if (!containerRef.current || !currentMap) return;
+    console.log('[GameCanvas] useEffect triggered', {
+      hasContainer: !!containerRef.current,
+      hasMap: !!currentMap,
+      mapId: currentMap?.id
+    });
+
+    if (!containerRef.current) {
+      console.log('[GameCanvas] No container ref, skipping');
+      return;
+    }
+
+    if (!currentMap) {
+      console.log('[GameCanvas] No map data, skipping');
+      return;
+    }
 
     const initPixi = async () => {
+      console.log('[GameCanvas] Initializing PixiJS...');
+
       // Clean up existing app
       if (appRef.current) {
+        console.log('[GameCanvas] Destroying existing app');
         appRef.current.destroy(true);
+        appRef.current = null;
       }
 
-      const app = new Application();
-      await app.init({
-        width,
-        height,
-        backgroundColor: 0x1a1a2e,
-        antialias: true,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
-      });
+      try {
+        const app = new Application();
+        console.log('[GameCanvas] Created Application instance');
 
-      containerRef.current?.appendChild(app.canvas);
-      appRef.current = app;
+        await app.init({
+          width,
+          height,
+          backgroundColor: 0x1a1a2e,
+          antialias: true,
+          resolution: window.devicePixelRatio || 1,
+          autoDensity: true,
+        });
+        console.log('[GameCanvas] App initialized, canvas:', app.canvas);
 
-      // Create map layer
-      const { mapContainer, offsetX, offsetY, tileSize } = createMapLayer(app, currentMap);
-      app.stage.addChild(mapContainer);
-
-      // Create player sprite
-      const playerSprite = createPlayerSprite(playerPosition, tileSize, offsetX, offsetY);
-      characterSpriteRef.current = playerSprite;
-      app.stage.addChild(playerSprite);
-
-      // Create UI overlay
-      const ui = createUIOverlay(app, currentMap);
-      app.stage.addChild(ui);
-
-      // Click to move
-      app.stage.eventMode = 'static';
-      app.stage.hitArea = app.screen;
-      app.stage.on('pointerdown', (event) => {
-        // Calculate tile position from click
-        const clickX = event.globalX;
-        const clickY = event.globalY;
-
-        const tileX = Math.floor((clickX - offsetX) / tileSize);
-        const tileY = Math.floor((clickY - offsetY) / tileSize);
-
-        // Check if valid tile
-        if (
-          tileX >= 0 &&
-          tileX < currentMap.width &&
-          tileY >= 0 &&
-          tileY < currentMap.height &&
-          currentMap.tiles[tileY][tileX].walkable
-        ) {
-          // Update position
-          setPlayerPosition({ x: tileX, y: tileY });
-
-          // Move sprite
-          if (characterSpriteRef.current) {
-            const newX = offsetX + tileX * tileSize + tileSize / 2;
-            const newY = offsetY + tileY * tileSize + tileSize / 2;
-            characterSpriteRef.current.position.set(newX, newY);
-          }
+        // Clear container first
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+          containerRef.current.appendChild(app.canvas);
+          console.log('[GameCanvas] Canvas appended to container');
         }
-      });
 
-      // Game loop for animations
-      app.ticker.add(() => {
-        // Future: Add idle animations, effects, etc.
-      });
+        appRef.current = app;
+
+        // Create map layer
+        const { mapContainer, offsetX, offsetY, tileSize } = createMapLayer(app, currentMap);
+        app.stage.addChild(mapContainer);
+        console.log('[GameCanvas] Map layer added');
+
+        // Create player sprite
+        const playerSprite = createPlayerSprite(playerPosition, tileSize, offsetX, offsetY);
+        characterSpriteRef.current = playerSprite;
+        app.stage.addChild(playerSprite);
+        console.log('[GameCanvas] Player sprite added');
+
+        // Create UI overlay
+        const ui = createUIOverlay(app, currentMap);
+        app.stage.addChild(ui);
+        console.log('[GameCanvas] UI overlay added');
+
+        // Click to move
+        app.stage.eventMode = 'static';
+        app.stage.hitArea = app.screen;
+        app.stage.on('pointerdown', (event) => {
+          const clickX = event.globalX;
+          const clickY = event.globalY;
+
+          const tileX = Math.floor((clickX - offsetX) / tileSize);
+          const tileY = Math.floor((clickY - offsetY) / tileSize);
+
+          if (
+            tileX >= 0 &&
+            tileX < currentMap.width &&
+            tileY >= 0 &&
+            tileY < currentMap.height &&
+            currentMap.tiles[tileY][tileX].walkable
+          ) {
+            setPlayerPosition({ x: tileX, y: tileY });
+
+            if (characterSpriteRef.current) {
+              const newX = offsetX + tileX * tileSize + tileSize / 2;
+              const newY = offsetY + tileY * tileSize + tileSize / 2;
+              characterSpriteRef.current.position.set(newX, newY);
+            }
+          }
+        });
+
+        // Start the ticker
+        app.ticker.add(() => {
+          // Future: Add idle animations
+        });
+
+        console.log('[GameCanvas] PixiJS fully initialized!');
+      } catch (error) {
+        console.error('[GameCanvas] Error initializing PixiJS:', error);
+      }
     };
 
     initPixi();
 
     return () => {
+      console.log('[GameCanvas] Cleanup triggered');
       if (appRef.current) {
         appRef.current.destroy(true, { children: true });
         appRef.current = null;
       }
     };
-  }, [width, height, currentMap, createMapLayer, createPlayerSprite, createUIOverlay, playerPosition]);
+  }, [width, height, currentMap?.id]); // Only re-init when map changes, not on every position change
 
   return (
     <div
