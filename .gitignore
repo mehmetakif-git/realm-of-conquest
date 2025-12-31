@@ -62,3 +62,7 @@ backend/tmp/
 tmp/
 temp/
 *.tmp
+
+# Database dumps (contains sensitive connection info)
+*_dump.sql
+*.dump

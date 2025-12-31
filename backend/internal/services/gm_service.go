@@ -423,10 +423,12 @@ func (s *GMService) DeactivateAnnouncement(ctx context.Context, id uuid.UUID) er
 
 // GM Action Logging
 func (s *GMService) logGMAction(ctx context.Context, gmID uuid.UUID, actionType string, targetAccountID, targetCharacterID *uuid.UUID, details string) {
+	// Convert details string to JSONB format
+	detailsJSON, _ := json.Marshal(map[string]string{"message": details})
 	_, _ = s.db.Pool.Exec(ctx, `
 		INSERT INTO gm_action_logs (id, gm_id, action_type, target_account_id, target_character_id, details, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`, uuid.New(), gmID, actionType, targetAccountID, targetCharacterID, details, time.Now())
+	`, uuid.New(), gmID, actionType, targetAccountID, targetCharacterID, detailsJSON, time.Now())
 }
 
 // Statistics
@@ -664,13 +666,16 @@ func (s *GMService) KickCharacter(ctx context.Context, gmID uuid.UUID, character
 	return nil
 }
 
-// SendGMMessage sends a system message to a character (stored as PM from system)
-func (s *GMService) SendGMMessage(ctx context.Context, gmID uuid.UUID, characterID uuid.UUID, message string) error {
-	// Insert as a special GM message
+// SendGMMessage sends a system message to a character (stored in gm_notifications)
+func (s *GMService) SendGMMessage(ctx context.Context, gmID uuid.UUID, characterID uuid.UUID, message string, notificationType string) error {
+	if notificationType == "" {
+		notificationType = "message"
+	}
+
 	_, err := s.db.Pool.Exec(ctx, `
-		INSERT INTO private_messages (id, sender_id, recipient_id, message, is_gm_message, created_at)
-		VALUES ($1, $2, $3, $4, true, NOW())
-	`, uuid.New(), gmID, characterID, message)
+		INSERT INTO gm_notifications (id, gm_id, character_id, message, notification_type, created_at)
+		VALUES ($1, $2, $3, $4, $5, NOW())
+	`, uuid.New(), gmID, characterID, message, notificationType)
 
 	if err != nil {
 		return fmt.Errorf("failed to send GM message: %w", err)
@@ -680,6 +685,47 @@ func (s *GMService) SendGMMessage(ctx context.Context, gmID uuid.UUID, character
 	s.logGMAction(ctx, gmID, "gm_message", nil, &characterID, fmt.Sprintf("Sent GM message: %s", message))
 
 	return nil
+}
+
+// GetUnreadGMNotifications gets unread GM notifications for a character
+func (s *GMService) GetUnreadGMNotifications(ctx context.Context, characterID uuid.UUID) ([]map[string]interface{}, error) {
+	rows, err := s.db.Pool.Query(ctx, `
+		SELECT n.id, n.message, n.notification_type, n.created_at, g.gm_name
+		FROM gm_notifications n
+		JOIN gm_accounts g ON g.id = n.gm_id
+		WHERE n.character_id = $1 AND n.is_read = false
+		ORDER BY n.created_at DESC
+	`, characterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notifications []map[string]interface{}
+	for rows.Next() {
+		var id uuid.UUID
+		var message, notifType, gmName string
+		var createdAt time.Time
+		if err := rows.Scan(&id, &message, &notifType, &createdAt, &gmName); err != nil {
+			continue
+		}
+		notifications = append(notifications, map[string]interface{}{
+			"id":                id,
+			"message":           message,
+			"notification_type": notifType,
+			"gm_name":           gmName,
+			"created_at":        createdAt,
+		})
+	}
+	return notifications, nil
+}
+
+// MarkGMNotificationRead marks a GM notification as read
+func (s *GMService) MarkGMNotificationRead(ctx context.Context, notificationID uuid.UUID) error {
+	_, err := s.db.Pool.Exec(ctx, `
+		UPDATE gm_notifications SET is_read = true, read_at = NOW() WHERE id = $1
+	`, notificationID)
+	return err
 }
 
 // GetOnlineGMCount returns count of GMs currently on duty

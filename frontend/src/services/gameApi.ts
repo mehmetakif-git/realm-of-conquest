@@ -27,11 +27,16 @@ export interface OnlinePlayer {
   gm_info?: CharacterGMInfo;
 }
 
+interface OnlineGMsResponse {
+  gms: OnlineGM[];
+  count: number;
+}
+
 export const gameApi = {
   // Public: Online GM listesi
   getOnlineGMs: async (): Promise<OnlineGM[]> => {
-    const response = await api.get<ApiResponse<OnlineGM[]>>('/gms/online');
-    return response.data.data || [];
+    const response = await api.get<ApiResponse<OnlineGMsResponse>>('/gms/online');
+    return response.data.data?.gms || [];
   },
 
   // Authenticated: Karakter GM kontrolü

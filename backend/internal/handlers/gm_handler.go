@@ -497,7 +497,8 @@ func (h *GMHandler) SendGMMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Message string `json:"message"`
+		Message          string `json:"message"`
+		NotificationType string `json:"notification_type"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		BadRequest(w, "invalid request body")
@@ -509,7 +510,7 @@ func (h *GMHandler) SendGMMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.gmService.SendGMMessage(r.Context(), gmID, charID, req.Message); err != nil {
+	if err := h.gmService.SendGMMessage(r.Context(), gmID, charID, req.Message, req.NotificationType); err != nil {
 		InternalError(w, "failed to send message")
 		return
 	}

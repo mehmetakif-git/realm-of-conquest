@@ -49,6 +49,11 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
   },
 
   selectCharacter: (character: Character | null) => {
+    if (character) {
+      localStorage.setItem('selectedCharacterId', character.id);
+    } else {
+      localStorage.removeItem('selectedCharacterId');
+    }
     set({ selectedCharacter: character });
   },
 
