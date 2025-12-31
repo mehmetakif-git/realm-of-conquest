@@ -6,6 +6,9 @@ import { gameApi, type OnlineGM, type CharacterGMInfo } from '../services/gameAp
 import { messageApi } from '../services/messageApi';
 import { ticketApi } from '../services/ticketApi';
 import type { PrivateMessage, Ticket } from '../types/gm';
+import GameCanvas from '../game/GameCanvas';
+import CombatSystem, { type CombatRewards } from '../game/CombatSystem';
+import type { MapMob, MapNPC } from '../game/types';
 
 // GM rol renkleri
 const GM_ROLE_COLORS: Record<string, string> = {
@@ -42,6 +45,11 @@ export default function GamePage() {
   const [ticketSubject, setTicketSubject] = useState('');
   const [ticketMessage, setTicketMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Game State
+  const [combatMob, setCombatMob] = useState<MapMob | null>(null);
+  const [activeNPC, setActiveNPC] = useState<MapNPC | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +141,46 @@ export default function GamePage() {
   const handleBackToCharacters = () => {
     selectCharacter(null);
     navigate('/characters');
+  };
+
+  // Game Event Handlers
+  const handleMobClick = (mob: MapMob) => {
+    setCombatMob(mob);
+  };
+
+  const handleNPCClick = (npc: MapNPC) => {
+    setActiveNPC(npc);
+  };
+
+  const handlePortalClick = (portalId: string, targetMapId: string) => {
+    // TODO: Implement map change via backend API
+    showNotification(`${targetMapId} haritasina isinlaniliyor...`, 'info');
+    console.log('Portal clicked:', portalId, targetMapId);
+  };
+
+  const handleCombatVictory = (rewards: CombatRewards) => {
+    setCombatMob(null);
+    showNotification(
+      `Zafer! +${rewards.experience} EXP, +${rewards.gold} Gold kazanildi!`,
+      'success'
+    );
+    // TODO: Update character stats via backend API
+  };
+
+  const handleCombatDefeat = () => {
+    setCombatMob(null);
+    showNotification('Yenildiniz! Koye geri donuyorsunuz.', 'error');
+    // TODO: Handle death penalty via backend API
+  };
+
+  const handleCombatFlee = () => {
+    setCombatMob(null);
+    showNotification('Savastan kactiniz!', 'info');
+  };
+
+  const showNotification = (message: string, type: 'success' | 'error' | 'info') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
   };
 
   return (
@@ -319,30 +367,26 @@ export default function GamePage() {
         </aside>
 
         {/* Main Game Content */}
-        <main className="flex-1 bg-gray-900 p-4 relative">
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-4xl font-game font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-600">
-                Oyun Alani
-              </h2>
-              <p className="text-gray-400 mb-6 max-w-md">
-                Bu alan PixiJS canvas ve Rive animasyonlari ile doldurulacak.
-                Simdilik MVP olarak temel ozellikler calisiyor.
-              </p>
-              <div className="inline-block bg-gray-800 rounded-lg px-6 py-4">
-                <p className="text-sm text-gray-500">
-                  📍 Konum: {selectedCharacter.map_id}<br />
-                  X: {selectedCharacter.position_x}, Y: {selectedCharacter.position_y}
-                </p>
-              </div>
+        <main className="flex-1 bg-gray-900 p-4 relative flex flex-col">
+          {/* Game Canvas */}
+          <div className="flex-1 flex items-center justify-center">
+            <GameCanvas
+              character={selectedCharacter}
+              width={800}
+              height={500}
+              onMobClick={handleMobClick}
+              onNPCClick={handleNPCClick}
+              onPortalClick={handlePortalClick}
+            />
+          </div>
 
-              {/* Test Action Buttons */}
-              <div className="mt-8 grid grid-cols-4 gap-4 max-w-2xl mx-auto">
-                <button className="btn-primary py-3">⚔️ Savas</button>
-                <button className="btn-secondary py-3">🗺️ Harita</button>
-                <button className="bg-gray-700 hover:bg-gray-600 py-3 rounded-lg">🏪 Market</button>
-                <button className="bg-gray-700 hover:bg-gray-600 py-3 rounded-lg">🏛️ Lonca</button>
-              </div>
+          {/* Bottom Action Bar */}
+          <div className="mt-4 flex justify-center">
+            <div className="grid grid-cols-4 gap-4 max-w-2xl w-full">
+              <button className="btn-primary py-3">⚔️ Savas</button>
+              <button className="btn-secondary py-3">🗺️ Harita</button>
+              <button className="bg-gray-700 hover:bg-gray-600 py-3 rounded-lg">🏪 Market</button>
+              <button className="bg-gray-700 hover:bg-gray-600 py-3 rounded-lg">🏛️ Lonca</button>
             </div>
           </div>
         </main>
@@ -473,6 +517,87 @@ export default function GamePage() {
           </aside>
         )}
       </div>
+
+      {/* Combat Modal */}
+      {combatMob && (
+        <CombatSystem
+          character={selectedCharacter}
+          mob={combatMob}
+          onVictory={handleCombatVictory}
+          onDefeat={handleCombatDefeat}
+          onFlee={handleCombatFlee}
+        />
+      )}
+
+      {/* NPC Dialog Modal */}
+      {activeNPC && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center text-3xl">
+                {activeNPC.type === 'merchant' ? '💰' :
+                 activeNPC.type === 'quest_giver' ? '❗' :
+                 activeNPC.type === 'blacksmith' ? '🔨' :
+                 activeNPC.type === 'trainer' ? '📚' :
+                 activeNPC.type === 'guild_master' ? '👑' : '👤'}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-yellow-400">{activeNPC.name}</h3>
+                <p className="text-gray-400 text-sm capitalize">{activeNPC.type.replace('_', ' ')}</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-700/50 rounded-lg p-4 mb-4">
+              <p className="text-gray-300">
+                {activeNPC.type === 'merchant' && 'Hos geldin yolcu! Ne almak istersin?'}
+                {activeNPC.type === 'quest_giver' && 'Sana bir gorevim var, dinler misin?'}
+                {activeNPC.type === 'blacksmith' && 'Ekipmanlarini guclendirebilirim.'}
+                {activeNPC.type === 'trainer' && 'Yeteneklerini gelistirmene yardimci olabilirim.'}
+                {activeNPC.type === 'guild_master' && 'Loncamiza hosgeldin, kahraman!'}
+                {activeNPC.type === 'banker' && 'Altinlarini guvenle saklayabilirim.'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {activeNPC.shopId && (
+                <button
+                  onClick={() => showNotification('Magaza sistemi yakinda eklenecek!', 'info')}
+                  className="bg-yellow-600 hover:bg-yellow-500 py-2 rounded-lg font-bold"
+                >
+                  Magazayi Ac
+                </button>
+              )}
+              {activeNPC.questIds && activeNPC.questIds.length > 0 && (
+                <button
+                  onClick={() => showNotification('Gorev sistemi yakinda eklenecek!', 'info')}
+                  className="bg-green-600 hover:bg-green-500 py-2 rounded-lg font-bold"
+                >
+                  Gorevleri Gor
+                </button>
+              )}
+              <button
+                onClick={() => setActiveNPC(null)}
+                className="bg-gray-600 hover:bg-gray-500 py-2 rounded-lg col-span-2"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+          <div className={`px-6 py-3 rounded-lg shadow-lg font-bold ${
+            notification.type === 'success' ? 'bg-green-600' :
+            notification.type === 'error' ? 'bg-red-600' :
+            'bg-blue-600'
+          }`}>
+            {notification.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
