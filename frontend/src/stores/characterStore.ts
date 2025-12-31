@@ -11,6 +11,7 @@ interface CharacterState {
   fetchCharacters: () => Promise<void>;
   createCharacter: (name: string, characterClass: CharacterClass) => Promise<Character>;
   selectCharacter: (character: Character | null) => void;
+  updateCharacter: (character: Character) => void;
   deleteCharacter: (id: string) => Promise<void>;
   clearError: () => void;
 }
@@ -55,6 +56,13 @@ export const useCharacterStore = create<CharacterState>((set, get) => ({
       localStorage.removeItem('selectedCharacterId');
     }
     set({ selectedCharacter: character });
+  },
+
+  updateCharacter: (character: Character) => {
+    set((state) => ({
+      selectedCharacter: state.selectedCharacter?.id === character.id ? character : state.selectedCharacter,
+      characters: state.characters.map((c) => c.id === character.id ? character : c),
+    }));
   },
 
   deleteCharacter: async (id: string) => {

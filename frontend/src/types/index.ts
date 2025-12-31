@@ -21,6 +21,21 @@ export type Specialization =
   | 'druid' | 'priest'                // Healer
   | 'assassin' | 'shadow_dancer';     // Ninja
 
+export interface Item {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  type: 'weapon' | 'armor' | 'accessory' | 'consumable' | 'material';
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  quantity?: number;
+  stats?: Record<string, number>;
+  level_required?: number;
+  class_required?: CharacterClass[];
+}
+
+export type FlagType = 'neutral' | 'red' | 'blue';
+
 export interface Character {
   id: string;
   account_id: string;
@@ -52,6 +67,14 @@ export interface Character {
   is_online: boolean;
   created_at: string;
   updated_at: string;
+  // Flag system fields
+  flag_type?: FlagType;
+  flag_changed_at?: string;
+  infamy?: number;
+  karma?: number;
+  pk_kills?: number;
+  pk_deaths?: number;
+  is_in_city?: boolean;
 }
 
 export interface AuthResponse {
