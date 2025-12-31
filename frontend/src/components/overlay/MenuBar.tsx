@@ -3,6 +3,7 @@ interface MenuBarProps {
   onInventoryClick?: () => void;
   onMarketClick?: () => void;
   onCaravanClick?: () => void;
+  onEnhancementClick?: () => void;
 }
 
 interface MenuButton {
@@ -17,10 +18,12 @@ export default function MenuBar({
   onInventoryClick,
   onMarketClick,
   onCaravanClick,
+  onEnhancementClick,
 }: MenuBarProps) {
   const menuButtons: MenuButton[] = [
     { id: 'character', label: 'CHARACTER', icon: '👤', onClick: onCharacterClick },
     { id: 'inventory', label: 'INVENTORY', icon: '🎒', onClick: onInventoryClick },
+    { id: 'enhancement', label: '+BASMA', icon: '⚔️', onClick: onEnhancementClick },
     { id: 'market', label: 'MARKET', icon: '🏪', onClick: onMarketClick },
     { id: 'caravan', label: 'KERVAN', icon: '🐪', onClick: onCaravanClick },
   ];

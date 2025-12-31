@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../stores/characterStore';
 import { useCaravanStore } from '../stores/caravanStore';
+import { useEnhancementStore } from '../stores/enhancementStore';
 import { gameApi, type CharacterGMInfo } from '../services/gameApi';
 import { GameLayout } from '../components/layout';
 import { GameWorld, type Mob, type NPC } from '../components/game';
 import { CombatModal } from '../components/modals';
 import { FlagSelector } from '../components/flag';
 import { CaravanCreateModal, CaravanListModal } from '../components/caravan';
+import { EnhancementModal } from '../components/enhancement';
 import type { FlagType } from '../types';
 import type { Caravan } from '../types/caravan';
 import { CARAVAN_TYPES } from '../types/caravan';
@@ -54,6 +56,10 @@ export default function GamePage() {
   const { caravans, createCaravan, joinAsGuard, leaveGuard, attackCaravan } = useCaravanStore();
   const [isCaravanCreateOpen, setIsCaravanCreateOpen] = useState(false);
   const [isCaravanListOpen, setIsCaravanListOpen] = useState(false);
+
+  // Enhancement State
+  const { items: enhanceableItems, enhancementStones, protectionItems, enhanceItem } = useEnhancementStore();
+  const [isEnhancementOpen, setIsEnhancementOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedCharacter) {
@@ -327,6 +333,7 @@ export default function GamePage() {
         onQuestClick={handleQuestClick}
         onFlagClick={handleFlagClick}
         onCaravanClick={() => setIsCaravanListOpen(true)}
+        onEnhancementClick={() => setIsEnhancementOpen(true)}
       >
         {/* Game World */}
         <GameWorld
@@ -389,6 +396,26 @@ export default function GamePage() {
           onCreateCaravan={() => {
             setIsCaravanListOpen(false);
             setIsCaravanCreateOpen(true);
+          }}
+        />
+      )}
+
+      {/* Enhancement Modal */}
+      {isEnhancementOpen && (
+        <EnhancementModal
+          playerItems={enhanceableItems}
+          enhancementStones={enhancementStones}
+          protectionItems={protectionItems}
+          playerGold={selectedCharacter.gold}
+          onClose={() => setIsEnhancementOpen(false)}
+          onEnhance={enhanceItem}
+          onSpendGold={(amount) => {
+            if (updateCharacter) {
+              updateCharacter({
+                ...selectedCharacter,
+                gold: selectedCharacter.gold - amount,
+              });
+            }
           }}
         />
       )}
