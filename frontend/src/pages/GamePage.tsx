@@ -493,6 +493,7 @@ export default function GamePage() {
         <DungeonModal
           playerLevel={selectedCharacter.level}
           playerClass="warrior"
+          playerName={selectedCharacter.name}
           team={dungeonTeam}
           dailyEntries={dailyEntries}
           lastResult={dungeonResult}
