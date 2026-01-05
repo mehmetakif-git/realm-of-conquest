@@ -133,7 +133,7 @@ export default function GameWorld({
   const myFlag = character.flag_type || 'neutral';
 
   // Get active caravan routes for route lines
-  const activeRoutes = useMemo(() => {
+  const activeRoutes = useMemo((): string[] => {
     return [...new Set(caravans.filter(c => c.status === 'traveling' || c.status === 'under_attack').map(c => c.route.id))];
   }, [caravans]);
 

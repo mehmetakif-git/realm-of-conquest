@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { Caravan } from '../../types/caravan';
-import { getStatusColor } from '../../types/caravan';
+import { getStatusColor, formatGold } from '../../types/caravan';
 
 interface CaravanMarkerProps {
   caravan: Caravan;
@@ -8,11 +8,12 @@ interface CaravanMarkerProps {
 }
 
 // Route path coordinates (simplified for demo)
-const ROUTE_PATHS: Record<number, { start: { x: number; y: number }; end: { x: number; y: number } }> = {
-  1: { start: { x: 10, y: 85 }, end: { x: 90, y: 85 } }, // Jangan -> Donwhang
-  2: { start: { x: 10, y: 85 }, end: { x: 50, y: 15 } }, // Jangan -> Hotan
-  3: { start: { x: 90, y: 85 }, end: { x: 50, y: 15 } }, // Donwhang -> Hotan
-  4: { start: { x: 10, y: 85 }, end: { x: 95, y: 10 } }, // Jangan -> Constantinople
+const ROUTE_PATHS: Record<string, { start: { x: number; y: number }; end: { x: number; y: number } }> = {
+  'route1': { start: { x: 10, y: 85 }, end: { x: 30, y: 75 } },
+  'route2': { start: { x: 30, y: 75 }, end: { x: 55, y: 55 } },
+  'route3': { start: { x: 55, y: 55 }, end: { x: 75, y: 35 } },
+  'route4': { start: { x: 75, y: 35 }, end: { x: 90, y: 15 } },
+  'route5': { start: { x: 90, y: 15 }, end: { x: 95, y: 5 } },
 };
 
 export default function CaravanMarker({ caravan, onClick }: CaravanMarkerProps) {
@@ -31,6 +32,7 @@ export default function CaravanMarker({ caravan, onClick }: CaravanMarkerProps) 
 
   const isUnderAttack = caravan.status === 'under_attack';
   const statusColor = getStatusColor(caravan.status);
+  const hpPercent = Math.round((caravan.hp / caravan.maxHp) * 100);
 
   return (
     <div
@@ -73,20 +75,31 @@ export default function CaravanMarker({ caravan, onClick }: CaravanMarkerProps) 
         )}
       </div>
 
+      {/* HP Bar mini */}
+      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-10 h-1 bg-black/50 rounded-full overflow-hidden">
+        <div
+          className={`h-full transition-all ${
+            hpPercent > 50 ? 'bg-green-500' : hpPercent > 25 ? 'bg-yellow-500' : 'bg-red-500'
+          }`}
+          style={{ width: `${hpPercent}%` }}
+        />
+      </div>
+
       {/* Tooltip on hover */}
       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
         <div
           className="bg-black/95 rounded-lg border px-3 py-2 whitespace-nowrap"
           style={{ borderColor: statusColor }}
         >
-          <div className="text-white font-bold text-sm">{type.name}</div>
+          <div className="text-white font-bold text-sm">{type.name} {type.emoji}</div>
           <div className="text-gray-400 text-xs">{caravan.ownerName}</div>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-yellow-400 text-xs">💰 {caravan.cargoValue.toLocaleString()}</span>
+            <span className="text-red-400 text-xs">❤️ {hpPercent}%</span>
+            <span className="text-yellow-400 text-xs">💰 {formatGold(caravan.potentialReward)}</span>
             <span className="text-blue-400 text-xs">🛡️ {caravan.guards.filter(g => g.status === 'active').length}</span>
           </div>
           <div className="text-xs mt-1" style={{ color: statusColor }}>
-            {route.startCity} → {route.endCity}
+            {route.startPoint.name} → {route.endPoint.name}
           </div>
           <div className="text-gray-500 text-xs">
             İlerleme: {Math.round(caravan.progressPercent)}%
@@ -121,7 +134,7 @@ export default function CaravanMarker({ caravan, onClick }: CaravanMarkerProps) 
 }
 
 // Component to show route lines on the map
-export function CaravanRouteLines({ activeRoutes }: { activeRoutes: number[] }) {
+export function CaravanRouteLines({ activeRoutes }: { activeRoutes: string[] }) {
   return (
     <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-30">
       {activeRoutes.map(routeId => {

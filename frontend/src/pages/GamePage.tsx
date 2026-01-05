@@ -17,7 +17,6 @@ import { DungeonModal } from '../components/dungeon';
 import type { FlagType } from '../types';
 import type { DungeonId, DifficultyId } from '../types/dungeon';
 import type { Caravan } from '../types/caravan';
-import { CARAVAN_TYPES } from '../types/caravan';
 
 // Initial mobs for the starting area
 const STARTING_MOBS: Mob[] = [
@@ -258,24 +257,21 @@ export default function GamePage() {
   }, [selectedCharacter, updateCharacter]);
 
   // Handle caravan creation
-  const handleCaravanCreate = useCallback((typeId: number, routeId: number, investment: number) => {
+  const handleCaravanCreate = useCallback((typeId: string, routeId: string) => {
     if (selectedCharacter && updateCharacter) {
-      createCaravan(
+      const caravan = createCaravan(
         selectedCharacter.id,
         selectedCharacter.name,
         selectedCharacter.level,
         typeId,
-        routeId,
-        investment
+        routeId
       );
 
       // Deduct gold from player
-      const type = CARAVAN_TYPES.find(t => t.id === typeId);
-      if (type) {
-        const totalCost = type.baseCost + investment;
+      if (caravan) {
         updateCharacter({
           ...selectedCharacter,
-          gold: selectedCharacter.gold - totalCost,
+          gold: selectedCharacter.gold - caravan.investment,
         });
       }
     }
@@ -305,7 +301,7 @@ export default function GamePage() {
   // Handle attacking caravan
   const handleAttackCaravan = useCallback((caravanId: string) => {
     if (selectedCharacter) {
-      attackCaravan(caravanId, selectedCharacter.id);
+      attackCaravan(caravanId, selectedCharacter.id, selectedCharacter.name);
     }
   }, [selectedCharacter, attackCaravan]);
 
