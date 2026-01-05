@@ -137,7 +137,6 @@ export default function GameCanvas({
         // NPC type indicator
         const typeIcon: Record<string, string> = {
           merchant: '💰',
-          quest_giver: '❗',
           blacksmith: '🔨',
           trainer: '📚',
           banker: '🏦',

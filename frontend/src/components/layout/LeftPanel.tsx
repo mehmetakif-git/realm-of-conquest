@@ -6,7 +6,6 @@ interface LeftPanelProps {
   character: Character;
   onlineGMs?: { gm_name: string; role: string }[];
   onInventoryClick?: () => void;
-  onQuestsClick?: () => void;
   onSkillsClick?: () => void;
   onPartyClick?: () => void;
   onSettingsClick?: () => void;
@@ -25,7 +24,6 @@ export default function LeftPanel({
   character,
   onlineGMs = [],
   onInventoryClick,
-  onQuestsClick,
   onSkillsClick,
   onPartyClick,
   onSettingsClick,
@@ -124,15 +122,6 @@ export default function LeftPanel({
             fullWidth
           >
             Envanter
-          </FantasyButton>
-          <FantasyButton
-            variant="dark"
-            size="small"
-            icon="📋"
-            onClick={onQuestsClick}
-            fullWidth
-          >
-            Gorevler
           </FantasyButton>
           <FantasyButton
             variant="dark"

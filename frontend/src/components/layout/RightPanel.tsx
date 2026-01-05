@@ -3,19 +3,11 @@ import { FantasyPanel } from '../ui';
 
 interface RightPanelProps {
   character: Character;
-  activeQuests?: { id: string; title: string; progress: string }[];
   activeBuffs?: { id: string; name: string; icon: string; duration: number }[];
 }
 
-// Mock quests for display
-const mockQuests = [
-  { id: '1', title: 'Ilk Adimlar', progress: '1/3' },
-  { id: '2', title: 'Slime Avci', progress: '0/10' },
-];
-
 export default function RightPanel({
   character,
-  activeQuests = mockQuests,
   activeBuffs = [],
 }: RightPanelProps) {
   return (
@@ -43,34 +35,6 @@ export default function RightPanel({
               {character.map_id || 'Baslangic Koyu'}
             </p>
           </div>
-        </FantasyPanel>
-      </div>
-
-      {/* Active Quests */}
-      <div className="p-3 border-b border-[#333355] flex-1 overflow-y-auto">
-        <FantasyPanel
-          title="Aktif Gorevler"
-          icon="📜"
-          variant="dark"
-          padding="small"
-        >
-          {activeQuests.length === 0 ? (
-            <p className="text-gray-500 text-xs text-center py-2">Aktif gorev yok</p>
-          ) : (
-            <div className="space-y-2">
-              {activeQuests.map((quest) => (
-                <div
-                  key={quest.id}
-                  className="bg-black/20 rounded p-2 hover:bg-black/30 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-1">
-                    <p className="text-xs text-white font-medium leading-tight">{quest.title}</p>
-                    <span className="text-[10px] text-yellow-400 whitespace-nowrap">{quest.progress}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </FantasyPanel>
       </div>
 

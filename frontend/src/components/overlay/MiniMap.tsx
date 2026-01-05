@@ -6,6 +6,7 @@ interface MiniMapProps {
   serverNumber?: number;
   onMapClick?: () => void;
   onFullMapClick?: () => void;
+  onGoNowClick?: () => void;
 }
 
 export default function MiniMap({
@@ -14,6 +15,7 @@ export default function MiniMap({
   serverNumber = 1,
   onMapClick,
   onFullMapClick,
+  onGoNowClick,
 }: MiniMapProps) {
   return (
     <div className="absolute top-2 right-2 z-30">
@@ -118,8 +120,14 @@ export default function MiniMap({
       </div>
       </div>
 
-      {/* Bonus Button */}
-      <div className="flex justify-end mt-2">
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2 mt-2">
+        <button
+          onClick={onGoNowClick}
+          className="px-3 py-1.5 bg-gradient-to-b from-green-500 to-green-700 text-white text-xs font-bold rounded border border-green-400 hover:from-green-400 hover:to-green-600 transition-colors"
+        >
+          🚕 TAKSI
+        </button>
         <button className="px-4 py-1.5 bg-gradient-to-b from-red-500 to-red-700 text-yellow-300 text-xs font-bold rounded border border-red-400 hover:from-red-400 hover:to-red-600 transition-colors animate-pulse">
           🎁 BONUS
         </button>

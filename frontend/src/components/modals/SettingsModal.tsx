@@ -21,7 +21,6 @@ interface GameSettings {
   // Gameplay
   autoPickup: boolean;
   showMinimap: boolean;
-  showQuests: boolean;
   // Notifications
   chatNotifications: boolean;
   partyNotifications: boolean;
@@ -53,7 +52,6 @@ export default function SettingsModal({
     showHealthBars: true,
     autoPickup: true,
     showMinimap: true,
-    showQuests: true,
     chatNotifications: true,
     partyNotifications: true,
     guildNotifications: true,
@@ -239,12 +237,6 @@ export default function SettingsModal({
                     settings.showMinimap,
                     (v) => updateSetting('showMinimap', v),
                     'Kucuk haritayi goster'
-                  )}
-                  {renderToggle(
-                    'Gorevler',
-                    settings.showQuests,
-                    (v) => updateSetting('showQuests', v),
-                    'Aktif gorevleri goster'
                   )}
                 </div>
               )}

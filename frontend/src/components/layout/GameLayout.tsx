@@ -1,18 +1,7 @@
 import { ReactNode } from 'react';
 import type { Character } from '../../types';
 import Header from './Header';
-import { CharacterPanel, MiniMap, QuestPanel, ChatPanel, SkillBar, MenuBar } from '../overlay';
-
-interface Quest {
-  id: string;
-  title: string;
-  chapter?: string;
-  description: string;
-  progress?: number;
-  maxProgress?: number;
-  nextStep?: string;
-  isComplete?: boolean;
-}
+import { CharacterPanel, MiniMap, ChatPanel, SkillBar, MenuBar } from '../overlay';
 
 interface GameLayoutProps {
   character: Character;
@@ -25,8 +14,6 @@ interface GameLayoutProps {
   // Mini map props
   serverName?: string;
   serverNumber?: number;
-  // Quest props
-  activeQuest?: Quest;
   // Event handlers
   onSettingsClick?: () => void;
   onNotificationsClick?: () => void;
@@ -34,7 +21,6 @@ interface GameLayoutProps {
   onMapClick?: () => void;
   onFullMapClick?: () => void;
   onGoNowClick?: () => void;
-  onQuestClick?: () => void;
   onSendMessage?: (message: string, channel: string) => void;
   onSkillClick?: (skillId: string) => void;
   onCharacterClick?: () => void;
@@ -58,14 +44,12 @@ export default function GameLayout({
   battleRating,
   serverName,
   serverNumber,
-  activeQuest,
   onSettingsClick,
   onNotificationsClick,
   onRechargeClick,
   onMapClick,
   onFullMapClick,
   onGoNowClick,
-  onQuestClick,
   onSendMessage,
   onSkillClick,
   onCharacterClick,
@@ -114,13 +98,7 @@ export default function GameLayout({
           serverNumber={serverNumber}
           onMapClick={onMapClick}
           onFullMapClick={onFullMapClick}
-        />
-
-        {/* Right Side Below Mini Map: Quest Panel */}
-        <QuestPanel
-          activeQuest={activeQuest}
           onGoNowClick={onGoNowClick}
-          onQuestClick={onQuestClick}
         />
 
         {/* Bottom-Left: Chat Panel */}

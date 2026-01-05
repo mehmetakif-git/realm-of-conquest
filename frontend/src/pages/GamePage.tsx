@@ -10,10 +10,12 @@ import { GameLayout } from '../components/layout';
 import { GameWorld, type Mob, type NPC } from '../components/game';
 import { CombatModal } from '../components/modals';
 import { FlagSelector } from '../components/flag';
-import { CaravanCreateModal, CaravanListModal } from '../components/caravan';
+import { CaravanCreateModal } from '../components/caravan';
 import { EnhancementModal } from '../components/enhancement';
 import { GuildModal } from '../components/guild';
 import { DungeonModal } from '../components/dungeon';
+import WorldMapModal from '../components/worldmap/WorldMapModal';
+import { TaxiModal } from '../components/taxi';
 import type { FlagType } from '../types';
 import type { DungeonId, DifficultyId } from '../types/dungeon';
 import type { Caravan } from '../types/caravan';
@@ -32,7 +34,6 @@ const STARTING_MOBS: Mob[] = [
 const STARTING_NPCS: NPC[] = [
   { id: 'npc1', name: 'Merchant Arin', type: 'merchant', x: 50, y: 85, icon: '🧔', dialogue: 'Finest goods in the realm!' },
   { id: 'npc2', name: 'Blacksmith Borin', type: 'blacksmith', x: 35, y: 90, icon: '⚒️', dialogue: 'Need something forged?' },
-  { id: 'npc3', name: 'Elder Mira', type: 'quest_giver', x: 65, y: 88, icon: '👵', dialogue: 'Hero! I have a task for you...' },
   { id: 'npc4', name: 'Healer Luna', type: 'healer', x: 45, y: 92, icon: '💚', dialogue: 'Let me tend to your wounds.' },
 ];
 
@@ -58,8 +59,7 @@ export default function GamePage() {
 
   // Caravan State
   const { caravans, createCaravan, joinAsGuard, leaveGuard, attackCaravan } = useCaravanStore();
-  const [isCaravanCreateOpen, setIsCaravanCreateOpen] = useState(false);
-  const [isCaravanListOpen, setIsCaravanListOpen] = useState(false);
+  const [isCaravanOpen, setIsCaravanOpen] = useState(false);
 
   // Enhancement State
   const { items: enhanceableItems, enhancementStones, protectionItems, enhanceItem } = useEnhancementStore();
@@ -92,6 +92,14 @@ export default function GamePage() {
     startDungeon,
   } = useDungeonStore();
   const [isDungeonOpen, setIsDungeonOpen] = useState(false);
+
+  // World Map State
+  const [isWorldMapOpen, setIsWorldMapOpen] = useState(false);
+  const [currentRegion, setCurrentRegion] = useState('starter_forest');
+  const [playerGearScore] = useState(250); // Mock gear score for now
+
+  // Taxi State
+  const [isTaxiOpen, setIsTaxiOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedCharacter) {
@@ -133,9 +141,6 @@ export default function GamePage() {
         break;
       case 'blacksmith':
         console.log('Opening forge...');
-        break;
-      case 'quest_giver':
-        console.log('Opening quest dialog...');
         break;
       case 'healer':
         console.log('Healing player...');
@@ -275,7 +280,7 @@ export default function GamePage() {
         });
       }
     }
-    setIsCaravanCreateOpen(false);
+    setIsCaravanOpen(false);
   }, [selectedCharacter, updateCharacter, createCaravan]);
 
   // Handle joining caravan as guard
@@ -307,7 +312,7 @@ export default function GamePage() {
 
   // Handle caravan click from map
   const handleCaravanClick = useCallback((_caravan: Caravan) => {
-    setIsCaravanListOpen(true);
+    setIsCaravanOpen(true);
   }, []);
 
   if (!selectedCharacter) {
@@ -332,15 +337,18 @@ export default function GamePage() {
   };
 
   const handleFullMapClick = () => {
-    console.log('Full map clicked');
+    setIsWorldMapOpen(true);
+  };
+
+  // Handle travel to region
+  const handleTravelToRegion = (regionId: string) => {
+    setCurrentRegion(regionId);
+    console.log(`Traveling to region: ${regionId}`);
   };
 
   const handleGoNowClick = () => {
-    console.log('Go now clicked');
-  };
-
-  const handleQuestClick = () => {
-    console.log('Quest clicked');
+    // Open Taxi Modal
+    setIsTaxiOpen(true);
   };
 
   return (
@@ -359,9 +367,8 @@ export default function GamePage() {
         onMapClick={handleMapClick}
         onFullMapClick={handleFullMapClick}
         onGoNowClick={handleGoNowClick}
-        onQuestClick={handleQuestClick}
         onFlagClick={handleFlagClick}
-        onCaravanClick={() => setIsCaravanListOpen(true)}
+        onCaravanClick={() => setIsCaravanOpen(true)}
         onEnhancementClick={() => setIsEnhancementOpen(true)}
         onGuildClick={() => setIsGuildOpen(true)}
         onDungeonClick={() => setIsDungeonOpen(true)}
@@ -403,31 +410,19 @@ export default function GamePage() {
         />
       )}
 
-      {/* Caravan Create Modal */}
-      {isCaravanCreateOpen && (
+      {/* Caravan System Modal */}
+      {isCaravanOpen && (
         <CaravanCreateModal
           playerGold={selectedCharacter.gold}
           playerLevel={selectedCharacter.level}
-          onClose={() => setIsCaravanCreateOpen(false)}
-          onCreate={handleCaravanCreate}
-        />
-      )}
-
-      {/* Caravan List Modal */}
-      {isCaravanListOpen && (
-        <CaravanListModal
-          caravans={caravans}
-          playerFlag={selectedCharacter.flag_type || 'neutral'}
-          playerLevel={selectedCharacter.level}
           playerId={selectedCharacter.id}
-          onClose={() => setIsCaravanListOpen(false)}
+          playerFlag={selectedCharacter.flag_type || 'neutral'}
+          caravans={caravans}
+          onClose={() => setIsCaravanOpen(false)}
+          onCreate={handleCaravanCreate}
           onJoinAsGuard={handleJoinAsGuard}
           onAttack={handleAttackCaravan}
           onLeaveGuard={handleLeaveGuard}
-          onCreateCaravan={() => {
-            setIsCaravanListOpen(false);
-            setIsCaravanCreateOpen(true);
-          }}
         />
       )}
 
@@ -501,6 +496,29 @@ export default function GamePage() {
             selectDifficulty(difficulty);
             return startDungeon();
           }}
+        />
+      )}
+
+      {/* World Map Modal */}
+      {isWorldMapOpen && (
+        <WorldMapModal
+          playerLevel={selectedCharacter.level}
+          playerGearScore={playerGearScore}
+          currentRegion={currentRegion}
+          onClose={() => setIsWorldMapOpen(false)}
+          onTravelTo={handleTravelToRegion}
+        />
+      )}
+
+      {/* Taxi Modal */}
+      {isTaxiOpen && (
+        <TaxiModal
+          playerId={selectedCharacter.id}
+          playerName={selectedCharacter.name}
+          playerLevel={selectedCharacter.level}
+          playerGold={selectedCharacter.gold}
+          currentRegion={currentRegion}
+          onClose={() => setIsTaxiOpen(false)}
         />
       )}
     </>

@@ -36,7 +36,7 @@ export interface Mob {
 export interface NPC {
   id: string;
   name: string;
-  type: 'merchant' | 'blacksmith' | 'quest_giver' | 'healer' | 'teleporter';
+  type: 'merchant' | 'blacksmith' | 'healer' | 'teleporter';
   x: number;
   y: number;
   icon: string;
@@ -77,8 +77,7 @@ const DEFAULT_MOBS: Mob[] = [
 const DEFAULT_NPCS: NPC[] = [
   { id: 'npc1', name: 'Merchant Arin', type: 'merchant', x: 50, y: 85, icon: '🧔', dialogue: 'Finest goods in the realm!' },
   { id: 'npc2', name: 'Blacksmith Borin', type: 'blacksmith', x: 35, y: 90, icon: '⚒️', dialogue: 'Need something forged?' },
-  { id: 'npc3', name: 'Elder Mira', type: 'quest_giver', x: 65, y: 88, icon: '👵', dialogue: 'Hero! I have a task for you...' },
-  { id: 'npc4', name: 'Healer Luna', type: 'healer', x: 45, y: 92, icon: '💚', dialogue: 'Let me tend to your wounds.' },
+  { id: 'npc3', name: 'Healer Luna', type: 'healer', x: 45, y: 92, icon: '💚', dialogue: 'Let me tend to your wounds.' },
 ];
 
 // Get type color for mobs
@@ -100,8 +99,6 @@ function getNPCTypeColor(type: NPC['type']): { bg: string; border: string } {
       return { bg: 'from-yellow-600 to-yellow-800', border: 'border-yellow-400' };
     case 'blacksmith':
       return { bg: 'from-orange-600 to-orange-800', border: 'border-orange-400' };
-    case 'quest_giver':
-      return { bg: 'from-blue-600 to-blue-800', border: 'border-blue-400' };
     case 'healer':
       return { bg: 'from-green-600 to-green-800', border: 'border-green-400' };
     case 'teleporter':
@@ -366,13 +363,6 @@ export default function GameWorld({
                   {npc.name}
                 </span>
               </div>
-
-              {/* Quest indicator for quest givers */}
-              {npc.type === 'quest_giver' && (
-                <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center animate-bounce">
-                  <span className="text-black text-xs font-bold">!</span>
-                </div>
-              )}
 
               {/* Hover tooltip */}
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
