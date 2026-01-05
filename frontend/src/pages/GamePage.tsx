@@ -4,6 +4,7 @@ import { useCharacterStore } from '../stores/characterStore';
 import { useCaravanStore } from '../stores/caravanStore';
 import { useEnhancementStore } from '../stores/enhancementStore';
 import { useGuildStore } from '../stores/guildStore';
+import { useDungeonStore } from '../stores/dungeonStore';
 import { gameApi, type CharacterGMInfo } from '../services/gameApi';
 import { GameLayout } from '../components/layout';
 import { GameWorld, type Mob, type NPC } from '../components/game';
@@ -12,7 +13,9 @@ import { FlagSelector } from '../components/flag';
 import { CaravanCreateModal, CaravanListModal } from '../components/caravan';
 import { EnhancementModal } from '../components/enhancement';
 import { GuildModal } from '../components/guild';
+import { DungeonModal } from '../components/dungeon';
 import type { FlagType } from '../types';
+import type { DungeonId, DifficultyId } from '../types/dungeon';
 import type { Caravan } from '../types/caravan';
 import { CARAVAN_TYPES } from '../types/caravan';
 
@@ -77,6 +80,19 @@ export default function GamePage() {
     upgradeGuild,
   } = useGuildStore();
   const [isGuildOpen, setIsGuildOpen] = useState(false);
+
+  // Dungeon State
+  const {
+    team: dungeonTeam,
+    dailyEntries,
+    lastResult: dungeonResult,
+    addToTeam,
+    removeFromTeam,
+    selectDungeon,
+    selectDifficulty,
+    startDungeon,
+  } = useDungeonStore();
+  const [isDungeonOpen, setIsDungeonOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedCharacter) {
@@ -352,6 +368,7 @@ export default function GamePage() {
         onCaravanClick={() => setIsCaravanListOpen(true)}
         onEnhancementClick={() => setIsEnhancementOpen(true)}
         onGuildClick={() => setIsGuildOpen(true)}
+        onDungeonClick={() => setIsDungeonOpen(true)}
       >
         {/* Game World */}
         <GameWorld
@@ -467,6 +484,25 @@ export default function GamePage() {
                 gold: selectedCharacter.gold - amount,
               });
             }
+          }}
+        />
+      )}
+
+      {/* Dungeon Modal */}
+      {isDungeonOpen && (
+        <DungeonModal
+          playerLevel={selectedCharacter.level}
+          playerClass="warrior"
+          team={dungeonTeam}
+          dailyEntries={dailyEntries}
+          lastResult={dungeonResult}
+          onClose={() => setIsDungeonOpen(false)}
+          onAddToTeam={addToTeam}
+          onRemoveFromTeam={removeFromTeam}
+          onStartDungeon={(dungeonId: DungeonId, difficulty: DifficultyId) => {
+            selectDungeon(dungeonId);
+            selectDifficulty(difficulty);
+            return startDungeon();
           }}
         />
       )}
