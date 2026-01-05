@@ -42,6 +42,7 @@ interface GameLayoutProps {
   onMarketClick?: () => void;
   onCaravanClick?: () => void;
   onEnhancementClick?: () => void;
+  onGuildClick?: () => void;
   onTitleClick?: () => void;
   onFlagClick?: () => void;
   // Content options
@@ -71,6 +72,7 @@ export default function GameLayout({
   onMarketClick,
   onCaravanClick,
   onEnhancementClick,
+  onGuildClick,
   onTitleClick,
   onFlagClick,
   isLoading = false,
@@ -132,6 +134,7 @@ export default function GameLayout({
           onMarketClick={onMarketClick}
           onCaravanClick={onCaravanClick}
           onEnhancementClick={onEnhancementClick}
+          onGuildClick={onGuildClick}
         />
       </div>
     </div>

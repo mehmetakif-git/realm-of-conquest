@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCharacterStore } from '../stores/characterStore';
 import { useCaravanStore } from '../stores/caravanStore';
 import { useEnhancementStore } from '../stores/enhancementStore';
+import { useGuildStore } from '../stores/guildStore';
 import { gameApi, type CharacterGMInfo } from '../services/gameApi';
 import { GameLayout } from '../components/layout';
 import { GameWorld, type Mob, type NPC } from '../components/game';
@@ -10,6 +11,7 @@ import { CombatModal } from '../components/modals';
 import { FlagSelector } from '../components/flag';
 import { CaravanCreateModal, CaravanListModal } from '../components/caravan';
 import { EnhancementModal } from '../components/enhancement';
+import { GuildModal } from '../components/guild';
 import type { FlagType } from '../types';
 import type { Caravan } from '../types/caravan';
 import { CARAVAN_TYPES } from '../types/caravan';
@@ -60,6 +62,21 @@ export default function GamePage() {
   // Enhancement State
   const { items: enhanceableItems, enhancementStones, protectionItems, enhanceItem } = useEnhancementStore();
   const [isEnhancementOpen, setIsEnhancementOpen] = useState(false);
+
+  // Guild State
+  const {
+    myGuild,
+    myMembership,
+    availableGuilds,
+    createGuild,
+    joinGuild,
+    leaveGuild,
+    donateGold,
+    promoteMember,
+    kickMember,
+    upgradeGuild,
+  } = useGuildStore();
+  const [isGuildOpen, setIsGuildOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedCharacter) {
@@ -334,6 +351,7 @@ export default function GamePage() {
         onFlagClick={handleFlagClick}
         onCaravanClick={() => setIsCaravanListOpen(true)}
         onEnhancementClick={() => setIsEnhancementOpen(true)}
+        onGuildClick={() => setIsGuildOpen(true)}
       >
         {/* Game World */}
         <GameWorld
@@ -409,6 +427,39 @@ export default function GamePage() {
           playerGold={selectedCharacter.gold}
           onClose={() => setIsEnhancementOpen(false)}
           onEnhance={enhanceItem}
+          onSpendGold={(amount) => {
+            if (updateCharacter) {
+              updateCharacter({
+                ...selectedCharacter,
+                gold: selectedCharacter.gold - amount,
+              });
+            }
+          }}
+        />
+      )}
+
+      {/* Guild Modal */}
+      {isGuildOpen && (
+        <GuildModal
+          playerGold={selectedCharacter.gold}
+          playerLevel={selectedCharacter.level}
+          playerId={selectedCharacter.id}
+          playerName={selectedCharacter.name}
+          myGuild={myGuild}
+          myRank={myMembership?.rank || null}
+          availableGuilds={availableGuilds}
+          onClose={() => setIsGuildOpen(false)}
+          onCreateGuild={(name, type, description) =>
+            createGuild(name, type, description, selectedCharacter.id, selectedCharacter.name, selectedCharacter.level)
+          }
+          onJoinGuild={(guildId) =>
+            joinGuild(guildId, selectedCharacter.id, selectedCharacter.name, selectedCharacter.level)
+          }
+          onLeaveGuild={leaveGuild}
+          onDonateGold={donateGold}
+          onPromoteMember={promoteMember}
+          onKickMember={kickMember}
+          onUpgradeGuild={upgradeGuild}
           onSpendGold={(amount) => {
             if (updateCharacter) {
               updateCharacter({
